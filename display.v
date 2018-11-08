@@ -70,24 +70,26 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
             counter2 <= 0;
             state <= 1;
         end
-        if (state == 1) begin
-            // reset complete if both counters are 7
-            if (counter1 == 7 && counter2 == 7)
-                state <= 0;
-            
-            // start reseting the board
-            else begin
-                // if random number is 5, throw away and do it on the next clock cycle
-                if (rout < 5) begin
-                    board[counter1][counter2] <= rout;
-                    
-                    // increment counters to run through all board spaces
-                    if (counter1 == 7) begin
-                        counter1 <= 0;
-                        counter2 <= counter2 + 1;
-                    end
-                    else begin
-                        counter1 = counter1 + 1;
+        else begin
+            if (state == 1) begin
+                // reset complete if both counters are 7
+                if (counter1 == 7 && counter2 == 7)
+                    state <= 0;
+                
+                // start reseting the board
+                else begin
+                    // if random number is 5, throw away and do it on the next clock cycle
+                    if (rout < 5) begin
+                        board[counter1][counter2] <= rout;
+                        
+                        // increment counters to run through all board spaces
+                        if (counter1 == 7) begin
+                            counter1 <= 0;
+                            counter2 <= counter2 + 1;
+                        end
+                        else begin
+                            counter1 = counter1 + 1;
+                        end
                     end
                 end
             end
