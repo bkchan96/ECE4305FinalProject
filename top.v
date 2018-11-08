@@ -43,7 +43,7 @@ module top(clk, reset, dreset, ps2d, ps2c, hsync, vsync, rgb);
         .key(key_enter));
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    // VGA Output Section
+    // VGA Output/Game Control Section
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     
     // signal declaration
@@ -52,8 +52,13 @@ module top(clk, reset, dreset, ps2d, ps2c, hsync, vsync, rgb);
     reg [11:0] rgb_reg;
     wire [11:0] rgb_next;
     
+    // vga_sync instantiation
     vga_sync u_vga_sync(.clk(clk), .reset(~dreset), .hsync(hsync), .vsync(vsync),
         .video_on(video_on), .p_tick(pixel_tick), .pixel_x(pixel_x), .pixel_y(pixel_y));
+    
+    // display and game engine instantiation
+    display(.video_on(video_on), .pix_x(pixel_x), .pix_y(pixel_y), .graph_rgb(rgb_next), .clk(clk), .reset(reset),
+        .left(key_left), .right(key_right), .up(key_up), .down(key_down), .enter(key_enter), .game_reset(key_game_reset));
     
     // assign output
     assign rgb = rgb_reg;
