@@ -88,7 +88,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                             counter2 <= counter2 + 1;
                         end
                         else begin
-                            counter1 = counter1 + 1;
+                            counter1 <= counter1 + 1;
                         end
                     end
                 end
@@ -106,7 +106,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     
     // declare all variables    
     wire s_on[7:0][7:0];
-    wire color[7:0][7:0];
+    wire [11:0] color[7:0][7:0];
     
     // always [row][column]
     
@@ -199,6 +199,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     
     // color parameters
     localparam WHITE    = 12'b111111111111;
+    localparam BLACK    = 12'b000000000000;
     
     // looping variables
     reg [7:0] i, k;
@@ -215,8 +216,8 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                       s_on[7][0] | s_on[7][1] | s_on[7][2] | s_on[7][3] | s_on[7][4] | s_on[7][5] | s_on[7][6] | s_on[7][7];
     
     always @*
-        if (video_on)
-            graph_rgb = 0; // blank
+        if (~video_on)
+            graph_rgb = BLACK; // blank
         else begin
             if (sym_flag) begin
                 for (i = 0; i < 8; i = i + 1) begin

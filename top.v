@@ -57,7 +57,7 @@ module top(clk, reset, dreset, ps2d, ps2c, hsync, vsync, rgb);
         .video_on(video_on), .p_tick(pixel_tick), .pixel_x(pixel_x), .pixel_y(pixel_y));
     
     // display and game engine instantiation
-    display(.video_on(video_on), .pix_x(pixel_x), .pix_y(pixel_y), .graph_rgb(rgb_next), .clk(clk), .reset(reset),
+    display u_display(.video_on(video_on), .pix_x(pixel_x), .pix_y(pixel_y), .graph_rgb(rgb_next), .clk(clk), .reset(reset),
         .left(key_left), .right(key_right), .up(key_up), .down(key_down), .enter(key_enter), .game_reset(key_game_reset));
     
     // assign output
