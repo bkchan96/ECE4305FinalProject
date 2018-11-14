@@ -55,27 +55,19 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     // declare counter to count up to 64
     reg [2:0] counter1, counter2;
     
-    // declare register to store state
-    reg state;
-    
     // reset routine
-    always @(posedge clk, posedge game_reset) begin
+    always @(posedge clk, posedge reset) begin
         if (reset) begin
             counter1 <= 0;
             counter2 <= 0;
-            state <= 0;
-        end
-        if (game_reset) begin
-            counter1 <= 0;
-            counter2 <= 0;
-            state <= 1;
         end
         else begin
-            if (state == 1) begin
+            if (game_reset) begin
                 // reset complete if both counters are 7
-                if (counter1 == 7 && counter2 == 7)
-                    state <= 0;
-                
+                if (counter1 == 7 && counter2 == 7) begin
+                    counter1 <= 0;
+                    counter2 <= 0;
+                end
                 // start reseting the board
                 else begin
                     // if random number is 5, throw away and do it on the next clock cycle

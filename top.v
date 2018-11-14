@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
-module top(clk, reset, dreset, ps2d, ps2c, hsync, vsync, rgb);
-    input clk, reset, dreset;
+module top(clk, reset, dreset, tempreset, ps2d, ps2c, hsync, vsync, rgb);
+    input clk, reset, dreset, tempreset;
     input ps2d, ps2c;
     output hsync, vsync;
     output [11:0] rgb;
@@ -58,7 +58,7 @@ module top(clk, reset, dreset, ps2d, ps2c, hsync, vsync, rgb);
     
     // display and game engine instantiation
     display u_display(.video_on(video_on), .pix_x(pixel_x), .pix_y(pixel_y), .graph_rgb(rgb_next), .clk(clk), .reset(reset),
-        .left(key_left), .right(key_right), .up(key_up), .down(key_down), .enter(key_enter), .game_reset(key_game_reset));
+        .left(key_left), .right(key_right), .up(key_up), .down(key_down), .enter(key_enter), .game_reset(tempreset));
     
     // assign output
     assign rgb = rgb_reg;
