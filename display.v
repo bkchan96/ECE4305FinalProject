@@ -40,6 +40,12 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
         end
     end
     
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Game Logic
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+        
+    // looping variables
+    reg [7:0] i, k; //row, column
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // Reset Routine
@@ -81,6 +87,26 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                         end
                         else begin
                             counter1 <= counter1 + 1;
+                        end
+                    end
+                end
+            end
+            else begin
+                for (i = 8; i > 0; i = i - 1) begin
+                    for (k = 6; k > 0; k = k - 1) begin
+                        if (board[i-1][k-1] == board[i-1][k] && board[i-1][k-1] == board[i-1][k+1]) begin
+                            board[i-1][k-1] <= 7;
+                            board[i-1][k] <=7;
+                            board[i-1][k+1] <=7;
+                        end 
+                    end
+                end
+                for (i = 8; i > 2; i = i - 1) begin
+                    for (k = 8; k > 0; k = k - 1) begin
+                        if (board[i-1][k-1] == board[i-2][k-1] && board[i-1][k-1] == board[i-3][k-1]) begin
+                            board[i-1][k-1] <= 7;
+                            board[i-2][k-1] <= 7;
+                            board[i-3][k-1] <= 7;
                         end
                     end
                 end
@@ -192,9 +218,8 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     // color parameters
     localparam WHITE    = 12'b111111111111;
     localparam BLACK    = 12'b000000000000;
-    
-    // looping variables
-    reg [7:0] i, k;
+
+    // looping variables i and k declared under "Game Logic" section
     
     // declare symbol flag to determine if a symbol is being displayed
     wire sym_flag;
