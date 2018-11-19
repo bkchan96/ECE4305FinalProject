@@ -2,7 +2,7 @@
 
 module LFSR(clk, random);
     input clk;
-    input [2:0] random;
+    output [2:0] random;
  
     reg [32:1] register = 0;
     wire r_XNOR;

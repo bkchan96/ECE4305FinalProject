@@ -64,13 +64,13 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
         else begin
             if (game_reset) begin
                 // reset complete if both counters are 7
-                if (counter1 == 7 && counter2 == 7) begin
+                if (counter1 == 7 && counter2 == 8) begin
                     counter1 <= 0;
                     counter2 <= 0;
                 end
                 // start reseting the board
                 else begin
-                    // if random number is 5, throw away and do it on the next clock cycle
+                    // if random number is greater than 4, throw away and do it on the next clock cycle
                     if (rout < 5) begin
                         board[counter1][counter2] <= rout;
                         
