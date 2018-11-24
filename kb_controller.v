@@ -9,7 +9,6 @@ module kb_controller
         output reg key
     );
     
-    wire scan_done_tick;
     wire [7:0] scan_code;
     
     localparam [1:0]

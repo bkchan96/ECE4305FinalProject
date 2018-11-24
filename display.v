@@ -19,25 +19,38 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     
     // declare and initilialize trigger flag
-    wire trigger = left || right || up || down || enter;
+    wire coltrigger, rowtrigger;
+    assign coltrigger = left || right;
+    assign rowtrigger = up || down;
     
-    // take keyboard input
-    always @(posedge trigger) begin
-        if (enter) begin
-            // enter key is pressed to select thing
+    // current selection
+    reg [3:0] rowselect, colselect;
+    
+    // state of selection
+    reg selected;
+    
+    // keyboard input for col
+    always @(posedge coltrigger, posedge reset) begin
+        if (reset) begin
+            colselect <= 0;
         end
-        else if (left) begin
-            // move left
+        else
+            if (left && colselect != 0)
+                colselect <= colselect - 1;
+            else if (right && colselect != 7)
+                colselect <= colselect + 1;
+    end
+    
+    // keyboard input for row
+    always @(posedge up, posedge reset) begin
+        if (reset) begin
+            rowselect <= 0;
         end
-        else if (right) begin
-            // move right
-        end
-        else if (up) begin
-            // move up
-        end
-        else if (down) begin
-            // move down
-        end
+        else
+            if (up && rowselect != 0)
+                rowselect <= rowselect - 1;
+            else if (down && rowselect != 7)
+                rowselect <= rowselect + 1;
     end
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -96,8 +109,8 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                     for (k = 6; k > 0; k = k - 1) begin
                         if (board[i-1][k-1] == board[i-1][k] && board[i-1][k-1] == board[i-1][k+1]) begin
                             board[i-1][k-1] <= 7;
-                            board[i-1][k] <=7;
-                            board[i-1][k+1] <=7;
+                            board[i-1][k]   <= 7;
+                            board[i-1][k+1] <= 7;
                         end 
                     end
                 end
@@ -117,6 +130,22 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     //----------------------------------------------------------------------------------------------------
     // Display
     //----------------------------------------------------------------------------------------------------
+    
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Cursor
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    // declare wires
+    wire [11:0] cursorColor;
+    wire cursorOn;
+    wire [9:0] cursorRow, cursorCol;
+    
+    // assign calculations
+    assign cursorRow = 112 + rowselect * 32;
+    assign cursorCol = 272 + colselect * 32;
+    
+    cursor u_cursor(.pixel_x(pix_x), .pixel_y(pix_y), .top_left_x(cursorCol), .top_left_y(cursorRow), .on(cursorOn), .color(cursorColor));
+    
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // instantiating display symbols
@@ -234,9 +263,11 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     
     always @*
         if (~video_on)
-            graph_rgb = BLACK; // blank
+            graph_rgb <= BLACK; // blank
         else begin
-            if (sym_flag) begin
+            if (cursorOn)
+                graph_rgb <= cursorColor; 
+            else if (sym_flag) begin
                 for (i = 0; i < 8; i = i + 1) begin
                     for (k = 0; k < 8; k = k + 1) begin
                         if (s_on[i][k] == 1)
@@ -245,7 +276,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                 end
             end
             else
-                graph_rgb = WHITE;
+                graph_rgb <= WHITE;
         end
 
 endmodule
