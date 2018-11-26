@@ -9,8 +9,6 @@ module kb_controller
         output reg key
     );
     
-    wire [7:0] scan_code;
-    
     localparam [1:0]
         idle    = 2'b00,
         state1  = 2'b01,

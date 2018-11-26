@@ -24,7 +24,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     assign rowtrigger = up || down;
     
     // current selection
-    reg [3:0] rowselect, colselect;
+    reg [2:0] rowselect, colselect;
     
     // state of selection
     reg selected;
@@ -42,9 +42,9 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     end
     
     // keyboard input for row
-    always @(posedge up, posedge reset) begin
+    always @(posedge rowtrigger, posedge reset) begin
         if (reset) begin
-            rowselect <= 0;
+            rowselect <= 7;
         end
         else
             if (up && rowselect != 0)
