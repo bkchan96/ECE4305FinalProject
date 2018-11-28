@@ -13,6 +13,6 @@ module LFSR(clk, random);
  
     assign r_XNOR = register[32] ^~ register[22] ^~ register[2] ^~ register[1];
  
-  assign random = register[3:1];
+    assign random = register[3:1];
  
 endmodule

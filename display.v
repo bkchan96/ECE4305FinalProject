@@ -12,7 +12,8 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     //----------------------------------------------------------------------------------------------------
     
     // declare board
-    reg [2:0] board [7:0][7:0];
+    reg [2:0] board  [7:0][7:0]; //master board
+    reg [2:0] boardr [7:0][7:0]; //reset board
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // Keyboard Input
@@ -60,6 +61,66 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     // looping variables
     reg [7:0] i, k; //row, column
     
+    // slow clock counter
+    reg counter, slowclk;
+    
+    // slow clock
+    always @ (posedge clk) begin
+        if (reset) begin
+            counter=0;
+            slowclk=0;
+        end
+        else begin
+            counter = counter +1;
+            if (counter == 1) begin
+                slowclk=~slowclk;
+                counter = 0;
+            end
+        end
+    end
+    
+    // board logic
+    always @(posedge slowclk, posedge reset) begin
+        if (reset) begin
+            for (i = 0; i < 8; i = i + 1) begin    
+                for (k = 0; k < 8; k = k + 1) begin
+                    board[i][k] <= 0;
+                end
+            end
+        end
+        else begin
+            for (i = 0; i < 8; i = i + 1) begin    
+                for (k = 0; k < 8; k = k + 1) begin
+                    if (board[i][k] != boardr[i][k])
+                        board[i][k] <= boardr[i][k];
+                end
+            end
+        end
+    end
+    
+    //clear checking logic
+    /*
+    else begin
+        for (i = 8; i > 0; i = i - 1) begin
+            for (k = 6; k > 0; k = k - 1) begin
+                if (board[i-1][k-1] == board[i-1][k] && board[i-1][k-1] == board[i-1][k+1]) begin
+                    board[i-1][k-1] <= 7;
+                    board[i-1][k]   <= 7;
+                    board[i-1][k+1] <= 7;
+                end 
+            end
+        end
+        for (i = 8; i > 2; i = i - 1) begin
+            for (k = 8; k > 0; k = k - 1) begin
+                if (board[i-1][k-1] == board[i-2][k-1] && board[i-1][k-1] == board[i-3][k-1]) begin
+                    board[i-1][k-1] <= 7;
+                    board[i-2][k-1] <= 7;
+                    board[i-3][k-1] <= 7;
+                end
+            end
+        end
+    end*/
+    
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // Reset Routine
     //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -81,6 +142,12 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
             counter2 <= 0;
         end
         else begin
+            for (i = 0; i < 8; i = i + 1) begin
+                for (k = 0; k < 8; k = k + 1) begin
+                    boardr[i][k] <= board[i][k];
+                end
+            end
+        
             if (game_reset) begin
                 // reset complete if both counters are 7
                 if (counter1 == 7 && counter2 == 8) begin
@@ -91,7 +158,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                 else begin
                     // if random number is greater than 4, throw away and do it on the next clock cycle
                     if (rout < 5) begin
-                        board[counter1][counter2] <= rout;
+                        boardr[counter1][counter2] <= rout;
                         
                         // increment counters to run through all board spaces
                         if (counter1 == 7) begin
@@ -100,26 +167,6 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                         end
                         else begin
                             counter1 <= counter1 + 1;
-                        end
-                    end
-                end
-            end
-            else begin
-                for (i = 8; i > 0; i = i - 1) begin
-                    for (k = 6; k > 0; k = k - 1) begin
-                        if (board[i-1][k-1] == board[i-1][k] && board[i-1][k-1] == board[i-1][k+1]) begin
-                            board[i-1][k-1] <= 7;
-                            board[i-1][k]   <= 7;
-                            board[i-1][k+1] <= 7;
-                        end 
-                    end
-                end
-                for (i = 8; i > 2; i = i - 1) begin
-                    for (k = 8; k > 0; k = k - 1) begin
-                        if (board[i-1][k-1] == board[i-2][k-1] && board[i-1][k-1] == board[i-3][k-1]) begin
-                            board[i-1][k-1] <= 7;
-                            board[i-2][k-1] <= 7;
-                            board[i-3][k-1] <= 7;
                         end
                     end
                 end
