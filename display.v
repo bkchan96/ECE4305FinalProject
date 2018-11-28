@@ -54,6 +54,17 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                 rowselect <= rowselect + 1;
     end
     
+    // keyboard input for selection
+    always @(posedge enter, posedge reset) begin
+        if (reset)
+            selected <= 0;
+        else
+            if (selected)
+                selected <= 0;
+            else
+                selected <= 1;
+    end
+    
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // Game Logic
     //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +90,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
         end
     end
     
-    // board logic
+    // board logic (uses slow clock to stop oscillation with other always blocks that are driven by the clock)
     always @(posedge slowclk, posedge reset) begin
         if (reset) begin
             for (i = 0; i < 8; i = i + 1) begin    
@@ -294,6 +305,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     // color parameters
     localparam WHITE    = 12'b111111111111;
     localparam BLACK    = 12'b000000000000;
+    localparam RED      = 12'b111100000000;
 
     // looping variables i and k declared under "Game Logic" section
     
@@ -312,8 +324,10 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
         if (~video_on)
             graph_rgb <= BLACK; // blank
         else begin
-            if (cursorOn)
-                graph_rgb <= cursorColor; 
+            if (cursorOn && ~selected)
+                graph_rgb <= cursorColor;
+            else if (cursorOn && selected)
+                graph_rgb <= RED;
             else if (sym_flag) begin
                 for (i = 0; i < 8; i = i + 1) begin
                     for (k = 0; k < 8; k = k + 1) begin
