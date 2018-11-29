@@ -11,13 +11,23 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     // Game Control
     //----------------------------------------------------------------------------------------------------
     
-    // declare board
+    // declare board (row/column)
     reg [2:0] board  [7:0][7:0]; //master board
     reg [2:0] boardr [7:0][7:0]; //reset board
+    reg [2:0] boards [7:0][7:0]; //switch board
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // Keyboard Input
     //////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    // keyboard blip wires
+    wire bleft, bright, bup, bdown;
+    
+    // keyboard blip modules
+    blipgen u_bleft (.in(left),  .clk(clk), .reset(reset), .out(bleft));
+    blipgen u_bright(.in(right), .clk(clk), .reset(reset), .out(bright));
+    blipgen u_bup   (.in(up),    .clk(clk), .reset(reset), .out(bup));
+    blipgen u_bdown (.in(down),  .clk(clk), .reset(reset), .out(bdown));
     
     // declare and initilialize trigger flag
     wire coltrigger, rowtrigger;
@@ -30,28 +40,37 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     // state of selection
     reg selected;
     
+    // switch flags
+    reg sleft, sright, sup, sdown;
+    
     // keyboard input for col
     always @(posedge coltrigger, posedge reset) begin
         if (reset) begin
             colselect <= 0;
+            sleft <= 0;
+            sright <= 0;
         end
-        else
-            if (left && colselect != 0)
-                colselect <= colselect - 1;
-            else if (right && colselect != 7)
-                colselect <= colselect + 1;
+        else begin
+                if (left && colselect != 0)
+                    colselect <= colselect - 1;
+                else if (right && colselect != 7)
+                    colselect <= colselect + 1;
+        end
     end
     
     // keyboard input for row
     always @(posedge rowtrigger, posedge reset) begin
         if (reset) begin
             rowselect <= 7;
+            sup <=0;
+            sdown <=0;
         end
-        else
-            if (up && rowselect != 0)
-                rowselect <= rowselect - 1;
-            else if (down && rowselect != 7)
-                rowselect <= rowselect + 1;
+        else begin
+                if (up && rowselect != 0)
+                    rowselect <= rowselect - 1;
+                else if (down && rowselect != 7)
+                    rowselect <= rowselect + 1;
+        end
     end
     
     // keyboard input for selection
@@ -90,7 +109,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
         end
     end
     
-    // board logic (uses slow clock to stop oscillation with other always blocks that are driven by the clock)
+    // board logic (uses slow clock to stop oscillation with other always blocks that are also driven by the clock)
     always @(posedge slowclk, posedge reset) begin
         if (reset) begin
             for (i = 0; i < 8; i = i + 1) begin    
@@ -102,9 +121,53 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
         else begin
             for (i = 0; i < 8; i = i + 1) begin    
                 for (k = 0; k < 8; k = k + 1) begin
-                    if (board[i][k] != boardr[i][k])
+                    if(board[i][k] != boardr[i][k])
                         board[i][k] <= boardr[i][k];
+                    else if (board[i][k] != boards[i][k])
+                        board[i][k] <= boards[i][k];
                 end
+            end
+        end
+    end
+    
+    // temporary switching variable
+    reg [2:0] boardt;
+    
+    //switching logic
+    always @(posedge clk, posedge reset) begin
+        if (reset)
+            for (i = 0; i < 8; i = i + 1) begin    
+                for (k = 0; k < 8; k = k + 1) begin
+                    boards[i][k] <= 0;
+                end
+            end
+        else begin
+            // restore board to nominal
+            for (i = 0; i < 8; i = i + 1) begin
+                for (k = 0; k < 8; k = k + 1) begin
+                    boards[i][k] <= board[i][k];
+                end
+            end
+            
+            if (bleft && colselect != 0) begin
+                boardt <= boards[rowselect][colselect];
+                boards[rowselect][colselect] <= boards[rowselect][colselect-1];
+                boards[rowselect][colselect-1] <= boardt;
+            end
+            else if (bright && colselect != 7) begin
+                boardt <= board[rowselect][colselect];
+                boards[rowselect][colselect] <= boards[rowselect][colselect+1];
+                boards[rowselect][colselect+1] <= boardt; 
+            end
+            else if (bup && rowselect != 0) begin
+                boardt <= board[rowselect][colselect];
+                boards[rowselect][colselect] <= boards[rowselect-1][colselect];
+                boards[rowselect-1][colselect] <= boardt;
+            end
+            else if (bdown && rowselect != 7) begin
+                boardt <= board[rowselect][colselect];
+                boards[rowselect][colselect] <= boards[rowselect+1][colselect];
+                boards[rowselect+1][colselect] <= boardt;     
             end
         end
     end
@@ -306,8 +369,6 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     localparam WHITE    = 12'b111111111111;
     localparam BLACK    = 12'b000000000000;
     localparam RED      = 12'b111100000000;
-
-    // looping variables i and k declared under "Game Logic" section
     
     // declare symbol flag to determine if a symbol is being displayed
     wire sym_flag;
