@@ -10,6 +10,8 @@ module top(clk, reset, dreset, ps2d, ps2c, hsync, vsync, rgb);
     // Keyboard section
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     
+    // declare wires
+    wire left, right, up, down, enter;
     wire rx_done_tick;
     wire [7:0] scan_code;
     wire key_left, key_right, key_up, key_down, key_game_reset, key_enter;
@@ -41,6 +43,14 @@ module top(clk, reset, dreset, ps2d, ps2c, hsync, vsync, rgb);
     kb_controller kb_enter(.clk(clk), .reset(reset), .scan_done_tick(rx_done_tick), .scan_code(scan_code),
         .scan_code_read(8'h5A),
         .key(key_enter));
+    
+    // keyboard blip modules
+    blipgen u_bleft (.in(key_left),  .clk(clk), .reset(reset), .out(left));
+    blipgen u_bright(.in(key_right), .clk(clk), .reset(reset), .out(right));
+    blipgen u_bup   (.in(key_up),    .clk(clk), .reset(reset), .out(up));
+    blipgen u_bdown (.in(key_down),  .clk(clk), .reset(reset), .out(down));
+    blipgen u_benter(.in(key_enter), .clk(clk), .reset(reset), .out(enter));
+    
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // VGA Output/Game Control Section
@@ -58,7 +68,7 @@ module top(clk, reset, dreset, ps2d, ps2c, hsync, vsync, rgb);
     
     // display and game engine instantiation
     display u_display(.video_on(video_on), .pix_x(pixel_x), .pix_y(pixel_y), .graph_rgb(rgb_next), .clk(clk), .reset(reset),
-        .left(key_left), .right(key_right), .up(key_up), .down(key_down), .enter(key_enter), .game_reset(key_game_reset));
+        .left(left), .right(right), .up(up), .down(down), .enter(enter), .game_reset(key_game_reset));
     
     // assign output
     assign rgb = rgb_reg;

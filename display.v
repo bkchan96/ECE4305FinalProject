@@ -15,58 +15,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     reg [2:0] board  [7:0][7:0]; //master board
     reg [2:0] boardr [7:0][7:0]; //reset board
     reg [2:0] boards [7:0][7:0]; //switch board
-    
-    //////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Keyboard Input
-    //////////////////////////////////////////////////////////////////////////////////////////////////////
-    
-    // keyboard blip wires
-    wire bleft, bright, bup, bdown, benter;
-    
-    // keyboard blip modules
-    blipgen u_bleft (.in(left),  .clk(clk), .reset(reset), .out(bleft));
-    blipgen u_bright(.in(right), .clk(clk), .reset(reset), .out(bright));
-    blipgen u_bup   (.in(up),    .clk(clk), .reset(reset), .out(bup));
-    blipgen u_bdown (.in(down),  .clk(clk), .reset(reset), .out(bdown));
-    blipgen u_benter(.in(enter), .clk(clk), .reset(reset), .out(benter));
-    
-    // current selection
-    reg [2:0] rowselect, colselect;
-    
-    // state of selection
-    reg selected;
-    
-    // keyboard input
-    always @(posedge clk, posedge reset) begin
-        if (reset) begin
-            colselect <= 0;
-            rowselect <= 0;
-        end
-        else
-            if (~selected)
-                if (bleft && colselect != 0)
-                    colselect <= colselect - 1;
-                else if (bright && colselect != 7)
-                    colselect <= colselect + 1;
-                else if (bup && rowselect != 0)
-                    rowselect <= rowselect - 1;
-                else if (bdown && rowselect != 7)
-                    rowselect <= rowselect + 1;
-    end
-    
-    // enter needs to be seperated, no fucking idea why, godamnit I fucking hate verilog
-    always @(posedge clk, posedge reset) begin
-        if (reset)
-            selected <= 0;
-        else 
-            if (benter)
-                selected <= ~selected;
-    end
-    
-    //////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Game Logic
-    //////////////////////////////////////////////////////////////////////////////////////////////////////
-        
+
     // looping variables
     reg [7:0] i, k; //row, column
     
@@ -88,7 +37,20 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
         end
     end
     
-    // board logic (uses slow clock to stop oscillation with other always blocks that are also driven by the clock)
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Game Logic
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    // current selection
+    reg [2:0] rowselect, colselect;
+    
+    // state of selection
+    reg selected;
+    
+    // temporary switching variable
+    reg [2:0] boardt;
+    
+    // MASTER board logic (uses slow clock to stop oscillation with other always blocks that are also driven by the clock)
     always @(posedge slowclk, posedge reset) begin
         if (reset) begin
             for (i = 0; i < 8; i = i + 1) begin    
@@ -109,8 +71,32 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
         end
     end
     
-    // temporary switching variable
-    reg [2:0] boardt;
+    // keyboard input
+    always @(posedge clk, posedge reset) begin
+        if (reset) begin
+            colselect <= 0;
+            rowselect <= 0;
+        end
+        else
+            if (~selected)
+                if (left && colselect != 0)
+                    colselect <= colselect - 1;
+                else if (right && colselect != 7)
+                    colselect <= colselect + 1;
+                else if (up && rowselect != 0)
+                    rowselect <= rowselect - 1;
+                else if (down && rowselect != 7)
+                    rowselect <= rowselect + 1;
+    end
+    
+    // enter needs to be seperated, no fucking idea why, godamnit I fucking hate verilog
+    always @(posedge clk, posedge reset) begin
+        if (reset)
+            selected <= 0;
+        else 
+            if (enter)
+                selected <= ~selected;
+    end
     
     //switching logic
     always @(posedge clk, posedge reset) begin
