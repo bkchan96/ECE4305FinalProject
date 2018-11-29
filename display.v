@@ -12,30 +12,10 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     //----------------------------------------------------------------------------------------------------
     
     // declare board (row/column)
-    reg [2:0] board  [7:0][7:0]; //master board
-    reg [2:0] boardr [7:0][7:0]; //reset board
-    reg [2:0] boards [7:0][7:0]; //switch board
+    reg [2:0] board  [7:0][7:0];
 
     // looping variables
     reg [7:0] i, k; //row, column
-    
-    // slow clock counter
-    reg counter, slowclk;
-    
-    // slow clock
-    always @ (posedge clk) begin
-        if (reset) begin
-            counter=0;
-            slowclk=0;
-        end
-        else begin
-            counter = counter +1;
-            if (counter == 1) begin
-                slowclk=~slowclk;
-                counter = 0;
-            end
-        end
-    end
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // Game Logic
@@ -50,9 +30,23 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     // temporary switching variable
     reg [2:0] boardt;
     
+    // reset routine ////////////////////////////////////////////////////////////
+    // declare wire and subtract by one because LFSR cannot output 0
+    wire [2:0] rout, random;
+    assign rout = random - 1;
+    
+    // instantiate random number generator
+    LFSR u_LFSR(.clk(clk), .random(random));
+    
+    // declare counter to count up to 64
+    reg [2:0] counter1, counter2;
+    
+    
     // MASTER board logic (uses slow clock to stop oscillation with other always blocks that are also driven by the clock)
-    always @(posedge slowclk, posedge reset) begin
+    always @(posedge clk, posedge reset) begin
         if (reset) begin
+            counter1 <= 0;
+            counter2 <= 0;
             for (i = 0; i < 8; i = i + 1) begin    
                 for (k = 0; k < 8; k = k + 1) begin
                     board[i][k] <= 0;
@@ -60,14 +54,47 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
             end
         end
         else begin
-            for (i = 0; i < 8; i = i + 1) begin    
-                for (k = 0; k < 8; k = k + 1) begin
-                    if(board[i][k] != boardr[i][k])
-                        board[i][k] <= boardr[i][k];
-                    else if (board[i][k] != boards[i][k])
-                        board[i][k] <= boards[i][k];
+            if (game_reset)
+                // reset complete if both counters are 7
+                if (counter1 == 7 && counter2 == 8) begin
+                    counter1 <= 0;
+                    counter2 <= 0;
                 end
-            end
+                // start reseting the board
+                else
+                    // if random number is greater than 4, throw away and do it on the next clock cycle
+                    if (rout < 5) begin
+                        board[counter1][counter2] <= rout;
+                        
+                        // increment counters to run through all board spaces
+                        if (counter1 == 7) begin
+                            counter1 <= 0;
+                            counter2 <= counter2 + 1;
+                        end
+                        else
+                            counter1 <= counter1 + 1;
+                    end
+            else if (selected)
+                if (left && colselect != 0) begin
+                    boardt = board[rowselect][colselect];
+                    board[rowselect][colselect] = board[rowselect][colselect-1];
+                    board[rowselect][colselect-1] = boardt;
+                end
+                else if (right && colselect != 7) begin
+                    boardt = board[rowselect][colselect];
+                    board[rowselect][colselect] = board[rowselect][colselect+1];
+                    board[rowselect][colselect+1] = boardt; 
+                end
+                else if (up && rowselect != 0) begin
+                    boardt = board[rowselect][colselect];
+                    board[rowselect][colselect] = board[rowselect-1][colselect];
+                    board[rowselect-1][colselect] = boardt;
+                end
+                else if (down && rowselect != 7) begin
+                    boardt = board[rowselect][colselect];
+                    board[rowselect][colselect] = board[rowselect+1][colselect];
+                    board[rowselect+1][colselect] = boardt;     
+                end
         end
     end
     
@@ -98,46 +125,6 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                 selected <= ~selected;
     end
     
-    //switching logic
-    always @(posedge clk, posedge reset) begin
-        if (reset)
-            for (i = 0; i < 8; i = i + 1) begin    
-                for (k = 0; k < 8; k = k + 1) begin
-                    boards[i][k] <= 0;
-                end
-            end
-        else begin
-            // restore board to nominal
-            for (i = 0; i < 8; i = i + 1) begin
-                for (k = 0; k < 8; k = k + 1) begin
-                    boards[i][k] <= board[i][k];
-                end
-            end
-//            if (selected) begin
-//                if (bleft && colselect != 0) begin
-//                    boardt = boards[rowselect][colselect];
-//                    boards[rowselect][colselect] = boards[rowselect][colselect-1];
-//                    boards[rowselect][colselect-1] = boardt;
-//                end
-//                else if (bright && colselect != 7) begin
-//                    boardt = board[rowselect][colselect];
-//                    boards[rowselect][colselect] = boards[rowselect][colselect+1];
-//                    boards[rowselect][colselect+1] = boardt; 
-//                end
-//                else if (bup && rowselect != 0) begin
-//                    boardt = board[rowselect][colselect];
-//                    boards[rowselect][colselect] = boards[rowselect-1][colselect];
-//                    boards[rowselect-1][colselect] = boardt;
-//                end
-//                else if (bdown && rowselect != 7) begin
-//                    boardt = board[rowselect][colselect];
-//                    boards[rowselect][colselect] = boards[rowselect+1][colselect];
-//                    boards[rowselect+1][colselect] = boardt;     
-//                end
-//            end
-        end
-    end
-    
     //clear checking logic
     /*
     else begin
@@ -160,64 +147,6 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
             end
         end
     end*/
-    
-    //////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Reset Routine
-    //////////////////////////////////////////////////////////////////////////////////////////////////////
-    
-    // declare wire and subtract by one because LFSR cannot output 0
-    wire [2:0] rout, random;
-    assign rout = random - 1;
-    
-    // instantiate random number generator
-    LFSR u_LFSR(.clk(clk), .random(random));
-    
-    // declare counter to count up to 64
-    reg [2:0] counter1, counter2;
-    
-    // reset routine
-    always @(posedge clk, posedge reset) begin
-        if (reset) begin
-            counter1 <= 0;
-            counter2 <= 0;
-            for (i = 0; i < 8; i = i + 1) begin
-                for (k = 0; k < 8; k = k + 1) begin
-                    boardr[i][k] <= 0;
-                end
-            end
-        end
-        else begin
-            for (i = 0; i < 8; i = i + 1) begin
-                for (k = 0; k < 8; k = k + 1) begin
-                    boardr[i][k] <= board[i][k];
-                end
-            end
-        
-            if (game_reset) begin
-                // reset complete if both counters are 7
-                if (counter1 == 7 && counter2 == 8) begin
-                    counter1 <= 0;
-                    counter2 <= 0;
-                end
-                // start reseting the board
-                else begin
-                    // if random number is greater than 4, throw away and do it on the next clock cycle
-                    if (rout < 5) begin
-                        boardr[counter1][counter2] <= rout;
-                        
-                        // increment counters to run through all board spaces
-                        if (counter1 == 7) begin
-                            counter1 <= 0;
-                            counter2 <= counter2 + 1;
-                        end
-                        else begin
-                            counter1 <= counter1 + 1;
-                        end
-                    end
-                end
-            end
-        end
-    end
     
     //----------------------------------------------------------------------------------------------------
     // Display
