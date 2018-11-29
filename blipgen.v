@@ -1,42 +1,16 @@
-`timescale 1ns / 1ps
-
-module blipgen(input in, input clk, input reset, output reg out);
-
-    // declare buffer and inverted clk
-    reg buffer;
-    wire inv;
-    assign inv = ~clk;
+module blipgen(input in, input clk, input reset, output out);
     
-    // slow clock counter
-    reg counter, slowinv;
+    // declare register
+    reg in_reg;
     
-    // slow clock
-    always @ (posedge inv) begin
-        if (reset) begin
-            counter=0;
-            slowinv=0;
-        end
-        else begin
-            counter = counter +1;
-            if (counter == 1) begin
-                slowinv=~slowinv;
-                counter = 0;
-            end
-        end
-    end
-    
-    always @(posedge clk) begin
-        if (in)
-            buffer = 1;
+    // detect input
+    always @(posedge clk, posedge reset)
+        if (reset)
+            in_reg <= 0;
         else
-            buffer = 0;
-    end
+            in_reg <= in;
     
-    always @(posedge buffer, posedge slowinv) begin
-        if (slowinv)
-            if (inv)
-                out = 0;
-        else
-            out = 1;
-    end
+    // determine blip length
+    assign out = in & ~in_reg;
+    
 endmodule

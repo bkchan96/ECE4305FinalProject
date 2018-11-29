@@ -21,18 +21,14 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     
     // keyboard blip wires
-    wire bleft, bright, bup, bdown;
+    wire bleft, bright, bup, bdown, benter;
     
     // keyboard blip modules
     blipgen u_bleft (.in(left),  .clk(clk), .reset(reset), .out(bleft));
     blipgen u_bright(.in(right), .clk(clk), .reset(reset), .out(bright));
     blipgen u_bup   (.in(up),    .clk(clk), .reset(reset), .out(bup));
     blipgen u_bdown (.in(down),  .clk(clk), .reset(reset), .out(bdown));
-    
-    // declare and initilialize trigger flag
-    wire coltrigger, rowtrigger;
-    assign coltrigger = left || right;
-    assign rowtrigger = up || down;
+    blipgen u_benter(.in(enter), .clk(clk), .reset(reset), .out(benter));
     
     // current selection
     reg [2:0] rowselect, colselect;
@@ -40,48 +36,31 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     // state of selection
     reg selected;
     
-    // switch flags
-    reg sleft, sright, sup, sdown;
-    
-    // keyboard input for col
-    always @(posedge coltrigger, posedge reset) begin
+    // keyboard input
+    always @(posedge clk, posedge reset) begin
         if (reset) begin
             colselect <= 0;
-            sleft <= 0;
-            sright <= 0;
+            rowselect <= 0;
         end
-        else begin
-                if (left && colselect != 0)
+        else
+            if (~selected)
+                if (bleft && colselect != 0)
                     colselect <= colselect - 1;
-                else if (right && colselect != 7)
+                else if (bright && colselect != 7)
                     colselect <= colselect + 1;
-        end
-    end
-    
-    // keyboard input for row
-    always @(posedge rowtrigger, posedge reset) begin
-        if (reset) begin
-            rowselect <= 7;
-            sup <=0;
-            sdown <=0;
-        end
-        else begin
-                if (up && rowselect != 0)
+                else if (bup && rowselect != 0)
                     rowselect <= rowselect - 1;
-                else if (down && rowselect != 7)
+                else if (bdown && rowselect != 7)
                     rowselect <= rowselect + 1;
-        end
     end
     
-    // keyboard input for selection
-    always @(posedge enter, posedge reset) begin
+    // enter needs to be seperated, no fucking idea why, godamnit I fucking hate verilog
+    always @(posedge clk, posedge reset) begin
         if (reset)
             selected <= 0;
-        else
-            if (selected)
-                selected <= 0;
-            else
-                selected <= 1;
+        else 
+            if (benter)
+                selected <= ~selected;
     end
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -148,27 +127,28 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                     boards[i][k] <= board[i][k];
                 end
             end
-            
-            if (bleft && colselect != 0) begin
-                boardt <= boards[rowselect][colselect];
-                boards[rowselect][colselect] <= boards[rowselect][colselect-1];
-                boards[rowselect][colselect-1] <= boardt;
-            end
-            else if (bright && colselect != 7) begin
-                boardt <= board[rowselect][colselect];
-                boards[rowselect][colselect] <= boards[rowselect][colselect+1];
-                boards[rowselect][colselect+1] <= boardt; 
-            end
-            else if (bup && rowselect != 0) begin
-                boardt <= board[rowselect][colselect];
-                boards[rowselect][colselect] <= boards[rowselect-1][colselect];
-                boards[rowselect-1][colselect] <= boardt;
-            end
-            else if (bdown && rowselect != 7) begin
-                boardt <= board[rowselect][colselect];
-                boards[rowselect][colselect] <= boards[rowselect+1][colselect];
-                boards[rowselect+1][colselect] <= boardt;     
-            end
+//            if (selected) begin
+//                if (bleft && colselect != 0) begin
+//                    boardt = boards[rowselect][colselect];
+//                    boards[rowselect][colselect] = boards[rowselect][colselect-1];
+//                    boards[rowselect][colselect-1] = boardt;
+//                end
+//                else if (bright && colselect != 7) begin
+//                    boardt = board[rowselect][colselect];
+//                    boards[rowselect][colselect] = boards[rowselect][colselect+1];
+//                    boards[rowselect][colselect+1] = boardt; 
+//                end
+//                else if (bup && rowselect != 0) begin
+//                    boardt = board[rowselect][colselect];
+//                    boards[rowselect][colselect] = boards[rowselect-1][colselect];
+//                    boards[rowselect-1][colselect] = boardt;
+//                end
+//                else if (bdown && rowselect != 7) begin
+//                    boardt = board[rowselect][colselect];
+//                    boards[rowselect][colselect] = boards[rowselect+1][colselect];
+//                    boards[rowselect+1][colselect] = boardt;     
+//                end
+//            end
         end
     end
     
@@ -214,6 +194,11 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
         if (reset) begin
             counter1 <= 0;
             counter2 <= 0;
+            for (i = 0; i < 8; i = i + 1) begin
+                for (k = 0; k < 8; k = k + 1) begin
+                    boardr[i][k] <= 0;
+                end
+            end
         end
         else begin
             for (i = 0; i < 8; i = i + 1) begin
