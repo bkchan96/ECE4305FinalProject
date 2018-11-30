@@ -149,7 +149,7 @@ module symbol
             endcase
         end
         else if (value == 3) begin
-            color = 12'b000011110000; // green
+            color = 12'b000000010000; // green
             case (rom_addr)
                 5'd0:  rom_data <=    32'b0000000000000000_0000000000000000;
                 5'd1:  rom_data <=    32'b0000000000000000_0000000000000000;

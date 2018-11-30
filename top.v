@@ -41,7 +41,7 @@ module top(clk, reset, dreset, ps2d, ps2c, hsync, vsync, rgb);
         .key(key_game_reset));
 
     kb_controller kb_enter(.clk(clk), .reset(reset), .scan_done_tick(rx_done_tick), .scan_code(scan_code),
-        .scan_code_read(8'h5A),
+        .scan_code_read(8'h29),
         .key(key_enter));
     
     // keyboard blip modules
