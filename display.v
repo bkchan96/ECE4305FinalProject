@@ -13,6 +13,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     
     // declare board (row/column)
     reg [2:0] board  [7:0][7:0];
+    reg [2:0] boardc [7:0][7:0];
 
     // looping variables
     reg [7:0] i, k; //row, column
@@ -41,8 +42,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     // declare counter to count up to 64
     reg [2:0] counter1, counter2;
     
-    
-    // MASTER board logic (uses slow clock to stop oscillation with other always blocks that are also driven by the clock)
+    // MASTER board logic
     always @(posedge clk, posedge reset) begin
         if (reset) begin
             colselect <= 0;
@@ -55,13 +55,25 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                     board[i][k] <= 0;
                 end
             end
+            for (i = 0; i < 8; i = i + 1) begin    
+                for (k = 0; k < 8; k = k + 1) begin
+                    boardc[i][k] <= 0;
+                end
+            end
         end
         
         else begin
+            for (i = 0; i < 8; i = i + 1) begin    
+                for (k = 0; k < 8; k = k + 1) begin
+                    boardc[i][k] <= board[i][k];
+                end
+            end
+        
             if (enter) begin
                 selected <= ~selected;
             end
             
+            // randomize the game board
             else if (game_reset) begin
                 // reset complete if both counters are 7
                 if (counter1 == 7 && counter2 == 8) begin
@@ -83,7 +95,8 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                             counter1 <= counter1 + 1;
                     end
             end
-                    
+            
+            // move the cursor
             else if (~selected) begin
                 if (left && colselect != 0)
                     colselect <= colselect - 1;
@@ -94,31 +107,136 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                 else if (down && rowselect != 7)
                     rowselect <= rowselect + 1;
             end
-    
+            
+            // switch
             else if (selected) begin
+                //--------------------------------------
+                // left
+                //--------------------------------------
                 if (left && colselect != 0) begin
+                    boardt = boardc[rowselect][colselect];
+                    boardc[rowselect][colselect] = boardc[rowselect][colselect-1];
+                    boardc[rowselect][colselect-1] = boardt;
+                    for (i = 8; i > 0; i = i - 1) begin
+                        for (k = 6; k > 0; k = k - 1) begin
+                            if (boardc[i-1][k-1] == boardc[i-1][k] && boardc[i-1][k-1] == boardc[i-1][k+1]) begin
+                                boardc[i-1][k-1] = 7;
+                                boardc[i-1][k]   = 7;
+                                boardc[i-1][k+1] = 7;
+                            end 
+                        end
+                    end
+                    for (i = 8; i > 2; i = i - 1) begin
+                        for (k = 8; k > 0; k = k - 1) begin
+                            if (boardc[i-1][k-1] == boardc[i-2][k-1] && boardc[i-1][k-1] == boardc[i-3][k-1]) begin
+                                boardc[i-1][k-1] = 7;
+                                boardc[i-2][k-1] = 7;
+                                boardc[i-3][k-1] = 7;
+                            end
+                        end
+                    end
+                    if (boardc[rowselect][colselect-1] == 7 || board[rowselect][colselect] == 7) begin
                         boardt = board[rowselect][colselect];
                         board[rowselect][colselect] = board[rowselect][colselect-1];
                         board[rowselect][colselect-1] = boardt;
-                        selected = 0;
+                    end
+                    selected = 0;
                 end
+                //--------------------------------------
+                // right
+                //--------------------------------------
                 else if (right && colselect != 7) begin
+                    boardt = boardc[rowselect][colselect];
+                    boardc[rowselect][colselect] = boardc[rowselect][colselect+1];
+                    boardc[rowselect][colselect+1] = boardt;
+                    for (i = 8; i > 0; i = i - 1) begin
+                        for (k = 6; k > 0; k = k - 1) begin
+                            if (boardc[i-1][k-1] == boardc[i-1][k] && boardc[i-1][k-1] == boardc[i-1][k+1]) begin
+                                boardc[i-1][k-1] = 7;
+                                boardc[i-1][k]   = 7;
+                                boardc[i-1][k+1] = 7;
+                            end 
+                        end
+                    end
+                    for (i = 8; i > 2; i = i - 1) begin
+                        for (k = 8; k > 0; k = k - 1) begin
+                            if (boardc[i-1][k-1] == boardc[i-2][k-1] && boardc[i-1][k-1] == boardc[i-3][k-1]) begin
+                                boardc[i-1][k-1] = 7;
+                                boardc[i-2][k-1] = 7;
+                                boardc[i-3][k-1] = 7;
+                            end
+                        end
+                    end
+                    if (boardc[rowselect][colselect+1] == 7 || board[rowselect][colselect] == 7) begin
                         boardt = board[rowselect][colselect];
                         board[rowselect][colselect] = board[rowselect][colselect+1];
                         board[rowselect][colselect+1] = boardt;
-                        selected = 0;
+                    end
+                    selected = 0;
                 end
+                //--------------------------------------
+                // up
+                //--------------------------------------
                 else if (up && rowselect != 0) begin
+                    boardt = board[rowselect][colselect];
+                    boardc[rowselect][colselect] = boardc[rowselect-1][colselect];
+                    boardc[rowselect-1][colselect] = boardt;
+                    for (i = 8; i > 0; i = i - 1) begin
+                        for (k = 6; k > 0; k = k - 1) begin
+                            if (boardc[i-1][k-1] == boardc[i-1][k] && boardc[i-1][k-1] == boardc[i-1][k+1]) begin
+                                boardc[i-1][k-1] = 7;
+                                boardc[i-1][k]   = 7;
+                                boardc[i-1][k+1] = 7;
+                            end 
+                        end
+                    end
+                    for (i = 8; i > 2; i = i - 1) begin
+                        for (k = 8; k > 0; k = k - 1) begin
+                            if (boardc[i-1][k-1] == boardc[i-2][k-1] && boardc[i-1][k-1] == boardc[i-3][k-1]) begin
+                                boardc[i-1][k-1] = 7;
+                                boardc[i-2][k-1] = 7;
+                                boardc[i-3][k-1] = 7;
+                            end
+                        end
+                    end
+                    if (boardc[rowselect-1][colselect] == 7 || board[rowselect][colselect] == 7) begin
                         boardt = board[rowselect][colselect];
                         board[rowselect][colselect] = board[rowselect-1][colselect];
                         board[rowselect-1][colselect] = boardt;
-                        selected = 0;
+                    end
+                    selected = 0;
                 end
+                //--------------------------------------
+                // down
+                //--------------------------------------
                 else if (down && rowselect != 7) begin
+                    boardt = board[rowselect][colselect];
+                    boardc[rowselect][colselect] = boardc[rowselect+1][colselect];
+                    boardc[rowselect+1][colselect] = boardt;
+                    for (i = 8; i > 0; i = i - 1) begin
+                        for (k = 6; k > 0; k = k - 1) begin
+                            if (boardc[i-1][k-1] == boardc[i-1][k] && boardc[i-1][k-1] == boardc[i-1][k+1]) begin
+                                boardc[i-1][k-1] = 7;
+                                boardc[i-1][k]   = 7;
+                                boardc[i-1][k+1] = 7;
+                            end 
+                        end
+                    end
+                    for (i = 8; i > 2; i = i - 1) begin
+                        for (k = 8; k > 0; k = k - 1) begin
+                            if (boardc[i-1][k-1] == boardc[i-2][k-1] && boardc[i-1][k-1] == boardc[i-3][k-1]) begin
+                                boardc[i-1][k-1] = 7;
+                                boardc[i-2][k-1] = 7;
+                                boardc[i-3][k-1] = 7;
+                            end
+                        end
+                    end
+                    if (boardc[rowselect+1][colselect] == 7 || board[rowselect][colselect] == 7) begin
                         boardt = board[rowselect][colselect];
                         board[rowselect][colselect] = board[rowselect+1][colselect];
                         board[rowselect+1][colselect] = boardt;
-                        selected = 0;
+                    end
+                    selected = 0;
                 end
             end
 
