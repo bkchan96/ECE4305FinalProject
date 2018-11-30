@@ -45,6 +45,9 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     // MASTER board logic (uses slow clock to stop oscillation with other always blocks that are also driven by the clock)
     always @(posedge clk, posedge reset) begin
         if (reset) begin
+            colselect <= 0;
+            rowselect <= 0;
+            selected <= 0;
             counter1 <= 0;
             counter2 <= 0;
             for (i = 0; i < 8; i = i + 1) begin    
@@ -53,8 +56,13 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                 end
             end
         end
+        
         else begin
-            if (game_reset)
+            if (enter) begin
+                selected <= ~selected;
+            end
+            
+            else if (game_reset) begin
                 // reset complete if both counters are 7
                 if (counter1 == 7 && counter2 == 8) begin
                     counter1 <= 0;
@@ -74,38 +82,9 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                         else
                             counter1 <= counter1 + 1;
                     end
-            else if (selected)
-                if (left && colselect != 0) begin
-                    boardt = board[rowselect][colselect];
-                    board[rowselect][colselect] = board[rowselect][colselect-1];
-                    board[rowselect][colselect-1] = boardt;
-                end
-                else if (right && colselect != 7) begin
-                    boardt = board[rowselect][colselect];
-                    board[rowselect][colselect] = board[rowselect][colselect+1];
-                    board[rowselect][colselect+1] = boardt; 
-                end
-                else if (up && rowselect != 0) begin
-                    boardt = board[rowselect][colselect];
-                    board[rowselect][colselect] = board[rowselect-1][colselect];
-                    board[rowselect-1][colselect] = boardt;
-                end
-                else if (down && rowselect != 7) begin
-                    boardt = board[rowselect][colselect];
-                    board[rowselect][colselect] = board[rowselect+1][colselect];
-                    board[rowselect+1][colselect] = boardt;     
-                end
-        end
-    end
-    
-    // keyboard input
-    always @(posedge clk, posedge reset) begin
-        if (reset) begin
-            colselect <= 0;
-            rowselect <= 0;
-        end
-        else
-            if (~selected)
+            end
+                    
+            else if (~selected) begin
                 if (left && colselect != 0)
                     colselect <= colselect - 1;
                 else if (right && colselect != 7)
@@ -114,15 +93,36 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                     rowselect <= rowselect - 1;
                 else if (down && rowselect != 7)
                     rowselect <= rowselect + 1;
-    end
+            end
     
-    // enter needs to be seperated, no fucking idea why, godamnit I fucking hate verilog
-    always @(posedge clk, posedge reset) begin
-        if (reset)
-            selected <= 0;
-        else 
-            if (enter)
-                selected <= ~selected;
+            else if (selected) begin
+                if (left && colselect != 0) begin
+                        boardt = board[rowselect][colselect];
+                        board[rowselect][colselect] = board[rowselect][colselect-1];
+                        board[rowselect][colselect-1] = boardt;
+                        selected = 0;
+                end
+                else if (right && colselect != 7) begin
+                        boardt = board[rowselect][colselect];
+                        board[rowselect][colselect] = board[rowselect][colselect+1];
+                        board[rowselect][colselect+1] = boardt;
+                        selected = 0;
+                end
+                else if (up && rowselect != 0) begin
+                        boardt = board[rowselect][colselect];
+                        board[rowselect][colselect] = board[rowselect-1][colselect];
+                        board[rowselect-1][colselect] = boardt;
+                        selected = 0;
+                end
+                else if (down && rowselect != 7) begin
+                        boardt = board[rowselect][colselect];
+                        board[rowselect][colselect] = board[rowselect+1][colselect];
+                        board[rowselect+1][colselect] = boardt;
+                        selected = 0;
+                end
+            end
+
+        end
     end
     
     //clear checking logic
