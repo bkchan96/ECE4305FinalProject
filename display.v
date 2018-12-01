@@ -60,7 +60,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
             end
             for (i = 0; i < 8; i = i + 1) begin    
                 for (k = 0; k < 8; k = k + 1) begin
-                    boardc[i][k] <= 0;
+                    boardc[i][k] = 0;
                 end
             end
         end
@@ -71,7 +71,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
             //--------------------------------------------------------------------------------------------
             for (i = 0; i < 8; i = i + 1) begin    
                 for (k = 0; k < 8; k = k + 1) begin
-                    boardc[i][k] <= board[i][k];
+                    boardc[i][k] = board[i][k];
                 end
             end
             //--------------------------------------------------------------------------------------------
@@ -146,7 +146,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                             end
                         end
                     end
-                    if (boardc[rowselect][colselect-1] == 7 || board[rowselect][colselect] == 7) begin
+                    if (boardc[rowselect][colselect-1] == 7 || boardc[rowselect][colselect] == 7) begin
                         boardt = board[rowselect][colselect];
                         board[rowselect][colselect] = board[rowselect][colselect-1];
                         board[rowselect][colselect-1] = boardt;
@@ -178,7 +178,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                             end
                         end
                     end
-                    if (boardc[rowselect][colselect+1] == 7 || board[rowselect][colselect] == 7) begin
+                    if (boardc[rowselect][colselect+1] == 7 || boardc[rowselect][colselect] == 7) begin
                         boardt = board[rowselect][colselect];
                         board[rowselect][colselect] = board[rowselect][colselect+1];
                         board[rowselect][colselect+1] = boardt;
@@ -210,7 +210,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                             end
                         end
                     end
-                    if (boardc[rowselect-1][colselect] == 7 || board[rowselect][colselect] == 7) begin
+                    if (boardc[rowselect-1][colselect] == 7 || boardc[rowselect][colselect] == 7) begin
                         boardt = board[rowselect][colselect];
                         board[rowselect][colselect] = board[rowselect-1][colselect];
                         board[rowselect-1][colselect] = boardt;
@@ -242,7 +242,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                             end
                         end
                     end
-                    if (boardc[rowselect+1][colselect] == 7 || board[rowselect][colselect] == 7) begin
+                    if (boardc[rowselect+1][colselect] == 7 || boardc[rowselect][colselect] == 7) begin
                         boardt = board[rowselect][colselect];
                         board[rowselect][colselect] = board[rowselect+1][colselect];
                         board[rowselect+1][colselect] = boardt;
