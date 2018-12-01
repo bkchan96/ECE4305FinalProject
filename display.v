@@ -67,6 +67,27 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
         
         else begin
             //--------------------------------------------------------------------------------------------
+            // clear board logic
+            //--------------------------------------------------------------------------------------------
+            for (i = 0; i < 8; i = i + 1) begin // horizontal check
+                for (k = 0; k < 6; k = k + 1) begin
+                    if (board[i][k] == board[i][k+1] && board[i][k] == board[i][k+2]) begin
+                        board[i][k]   = 7;
+                        board[i][k+1] = 7;
+                        board[i][k+2] = 7;
+                    end 
+                end
+            end
+            for (i = 0; i < 6; i = i + 1) begin // vertical check
+                for (k = 0; k < 8; k = k + 1) begin
+                    if (board[i][k] == board[i+1][k] && board[i][k] == board[i+2][k]) begin
+                        board[i][k]   = 7;
+                        board[i+1][k] = 7;
+                        board[i+2][k] = 7;
+                    end
+                end
+            end
+            //--------------------------------------------------------------------------------------------
             // load board copy to check switching logic
             //--------------------------------------------------------------------------------------------
             for (i = 0; i < 8; i = i + 1) begin    
@@ -128,21 +149,21 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                     boardt = boardc[rowselect][colselect];
                     boardc[rowselect][colselect] = boardc[rowselect][colselect-1];
                     boardc[rowselect][colselect-1] = boardt;
-                    for (i = 8; i > 0; i = i - 1) begin
-                        for (k = 6; k > 0; k = k - 1) begin
-                            if (boardc[i-1][k-1] == boardc[i-1][k] && boardc[i-1][k-1] == boardc[i-1][k+1]) begin
-                                boardc[i-1][k-1] = 7;
-                                boardc[i-1][k]   = 7;
-                                boardc[i-1][k+1] = 7;
+                    for (i = 0; i < 8; i = i + 1) begin // horizontal check
+                        for (k = 0; k < 6; k = k + 1) begin
+                            if (boardc[i][k] == boardc[i][k+1] && boardc[i][k] == boardc[i][k+2]) begin
+                                boardc[i][k]   = 7;
+                                boardc[i][k+1] = 7;
+                                boardc[i][k+2] = 7;
                             end 
                         end
                     end
-                    for (i = 8; i > 2; i = i - 1) begin
-                        for (k = 8; k > 0; k = k - 1) begin
-                            if (boardc[i-1][k-1] == boardc[i-2][k-1] && boardc[i-1][k-1] == boardc[i-3][k-1]) begin
-                                boardc[i-1][k-1] = 7;
-                                boardc[i-2][k-1] = 7;
-                                boardc[i-3][k-1] = 7;
+                    for (i = 0; i < 6; i = i + 1) begin // vertical check
+                        for (k = 0; k < 8; k = k + 1) begin
+                            if (boardc[i][k] == boardc[i+1][k] && boardc[i][k] == boardc[i+2][k]) begin
+                                boardc[i][k]   = 7;
+                                boardc[i+1][k] = 7;
+                                boardc[i+2][k] = 7;
                             end
                         end
                     end
@@ -160,21 +181,21 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                     boardt = boardc[rowselect][colselect];
                     boardc[rowselect][colselect] = boardc[rowselect][colselect+1];
                     boardc[rowselect][colselect+1] = boardt;
-                    for (i = 8; i > 0; i = i - 1) begin
-                        for (k = 6; k > 0; k = k - 1) begin
-                            if (boardc[i-1][k-1] == boardc[i-1][k] && boardc[i-1][k-1] == boardc[i-1][k+1]) begin
-                                boardc[i-1][k-1] = 7;
-                                boardc[i-1][k]   = 7;
-                                boardc[i-1][k+1] = 7;
+                    for (i = 0; i < 8; i = i + 1) begin // horizontal check
+                        for (k = 0; k < 6; k = k + 1) begin
+                            if (boardc[i][k] == boardc[i][k+1] && boardc[i][k] == boardc[i][k+2]) begin
+                                boardc[i][k]   = 7;
+                                boardc[i][k+1] = 7;
+                                boardc[i][k+2] = 7;
                             end 
                         end
                     end
-                    for (i = 8; i > 2; i = i - 1) begin
-                        for (k = 8; k > 0; k = k - 1) begin
-                            if (boardc[i-1][k-1] == boardc[i-2][k-1] && boardc[i-1][k-1] == boardc[i-3][k-1]) begin
-                                boardc[i-1][k-1] = 7;
-                                boardc[i-2][k-1] = 7;
-                                boardc[i-3][k-1] = 7;
+                    for (i = 0; i < 6; i = i + 1) begin // vertical check
+                        for (k = 0; k < 8; k = k + 1) begin
+                            if (boardc[i][k] == boardc[i+1][k] && boardc[i][k] == boardc[i+2][k]) begin
+                                boardc[i][k]   = 7;
+                                boardc[i+1][k] = 7;
+                                boardc[i+2][k] = 7;
                             end
                         end
                     end
@@ -192,21 +213,21 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                     boardt = board[rowselect][colselect];
                     boardc[rowselect][colselect] = boardc[rowselect-1][colselect];
                     boardc[rowselect-1][colselect] = boardt;
-                    for (i = 8; i > 0; i = i - 1) begin
-                        for (k = 6; k > 0; k = k - 1) begin
-                            if (boardc[i-1][k-1] == boardc[i-1][k] && boardc[i-1][k-1] == boardc[i-1][k+1]) begin
-                                boardc[i-1][k-1] = 7;
-                                boardc[i-1][k]   = 7;
-                                boardc[i-1][k+1] = 7;
+                    for (i = 0; i < 8; i = i + 1) begin // horizontal check
+                        for (k = 0; k < 6; k = k + 1) begin
+                            if (boardc[i][k] == boardc[i][k+1] && boardc[i][k] == boardc[i][k+2]) begin
+                                boardc[i][k]   = 7;
+                                boardc[i][k+1] = 7;
+                                boardc[i][k+2] = 7;
                             end 
                         end
                     end
-                    for (i = 8; i > 2; i = i - 1) begin
-                        for (k = 8; k > 0; k = k - 1) begin
-                            if (boardc[i-1][k-1] == boardc[i-2][k-1] && boardc[i-1][k-1] == boardc[i-3][k-1]) begin
-                                boardc[i-1][k-1] = 7;
-                                boardc[i-2][k-1] = 7;
-                                boardc[i-3][k-1] = 7;
+                    for (i = 0; i < 6; i = i + 1) begin // vertical check
+                        for (k = 0; k < 8; k = k + 1) begin
+                            if (boardc[i][k] == boardc[i+1][k] && boardc[i][k] == boardc[i+2][k]) begin
+                                boardc[i][k]   = 7;
+                                boardc[i+1][k] = 7;
+                                boardc[i+2][k] = 7;
                             end
                         end
                     end
@@ -224,21 +245,21 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                     boardt = board[rowselect][colselect];
                     boardc[rowselect][colselect] = boardc[rowselect+1][colselect];
                     boardc[rowselect+1][colselect] = boardt;
-                    for (i = 8; i > 0; i = i - 1) begin
-                        for (k = 6; k > 0; k = k - 1) begin
-                            if (boardc[i-1][k-1] == boardc[i-1][k] && boardc[i-1][k-1] == boardc[i-1][k+1]) begin
-                                boardc[i-1][k-1] = 7;
-                                boardc[i-1][k]   = 7;
-                                boardc[i-1][k+1] = 7;
+                    for (i = 0; i < 8; i = i + 1) begin // horizontal check
+                        for (k = 0; k < 6; k = k + 1) begin
+                            if (boardc[i][k] == boardc[i][k+1] && boardc[i][k] == boardc[i][k+2]) begin
+                                boardc[i][k]   = 7;
+                                boardc[i][k+1] = 7;
+                                boardc[i][k+2] = 7;
                             end 
                         end
                     end
-                    for (i = 8; i > 2; i = i - 1) begin
-                        for (k = 8; k > 0; k = k - 1) begin
-                            if (boardc[i-1][k-1] == boardc[i-2][k-1] && boardc[i-1][k-1] == boardc[i-3][k-1]) begin
-                                boardc[i-1][k-1] = 7;
-                                boardc[i-2][k-1] = 7;
-                                boardc[i-3][k-1] = 7;
+                    for (i = 0; i < 6; i = i + 1) begin // vertical check
+                        for (k = 0; k < 8; k = k + 1) begin
+                            if (boardc[i][k] == boardc[i+1][k] && boardc[i][k] == boardc[i+2][k]) begin
+                                boardc[i][k]   = 7;
+                                boardc[i+1][k] = 7;
+                                boardc[i+2][k] = 7;
                             end
                         end
                     end
@@ -257,29 +278,6 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
             end
         end
     end
-    
-    //clear checking logic
-    /*
-    else begin
-        for (i = 8; i > 0; i = i - 1) begin
-            for (k = 6; k > 0; k = k - 1) begin
-                if (board[i-1][k-1] == board[i-1][k] && board[i-1][k-1] == board[i-1][k+1]) begin
-                    board[i-1][k-1] <= 7;
-                    board[i-1][k]   <= 7;
-                    board[i-1][k+1] <= 7;
-                end 
-            end
-        end
-        for (i = 8; i > 2; i = i - 1) begin
-            for (k = 8; k > 0; k = k - 1) begin
-                if (board[i-1][k-1] == board[i-2][k-1] && board[i-1][k-1] == board[i-3][k-1]) begin
-                    board[i-1][k-1] <= 7;
-                    board[i-2][k-1] <= 7;
-                    board[i-3][k-1] <= 7;
-                end
-            end
-        end
-    end*/
     
     //--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//
     // Display ///////////////////////////////////////////////////////////////////////////////////////////
