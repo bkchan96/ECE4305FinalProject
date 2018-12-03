@@ -1,11 +1,12 @@
 `timescale 1ns / 1ps
 
-module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, down, enter, game_reset);
+module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, down, enter, game_reset, sound);
     input clk, reset;
     input left, right, up, down, enter, game_reset;
     input video_on;
     input [9:0] pix_x, pix_y;
     output reg [11:0] graph_rgb;
+    output reg sound;
     
     //--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//
     // Game Control //////////////////////////////////////////////////////////////////////////////////////
@@ -73,6 +74,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
         end
         
         else begin
+            sound <= 0;
             //--------------------------------------------------------------------------------------------
             // shift down
             //--------------------------------------------------------------------------------------------
@@ -98,18 +100,20 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
             for (i = 0; i < 8; i = i + 1) begin // horizontal check
                 for (k = 0; k < 6; k = k + 1) begin
                     if (board[i][k] == board[i][k+1] && board[i][k] == board[i][k+2] && board[i][k] != 7) begin
-                        board[i][k]   <= 7;
-                        board[i][k+1] <= 7;
-                        board[i][k+2] <= 7;
+                        board[i][k]   = 7;
+                        board[i][k+1] = 7;
+                        board[i][k+2] = 7;
+                        sound <= 1;
                     end 
                 end
             end
             for (i = 0; i < 6; i = i + 1) begin // vertical check
                 for (k = 0; k < 8; k = k + 1) begin
                     if (board[i][k] == board[i+1][k] && board[i][k] == board[i+2][k] && board[i][k] != 7) begin
-                        board[i][k]   <= 7;
-                        board[i+1][k] <= 7;
-                        board[i+2][k] <= 7;
+                        board[i][k]   = 7;
+                        board[i+1][k] = 7;
+                        board[i+2][k] = 7;
+                        sound <= 1;
                     end
                 end
             end

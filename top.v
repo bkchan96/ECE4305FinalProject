@@ -1,10 +1,11 @@
 `timescale 1ns / 1ps
 
-module top(clk, reset, dreset, ps2d, ps2c, hsync, vsync, rgb);
+module top(clk, reset, dreset, ps2d, ps2c, hsync, vsync, rgb, audioOut, aud_sd);
     input clk, reset, dreset;
     input ps2d, ps2c;
     output hsync, vsync;
     output [11:0] rgb;
+    output audioOut, aud_sd;
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // Keyboard section
@@ -51,7 +52,15 @@ module top(clk, reset, dreset, ps2d, ps2c, hsync, vsync, rgb);
     blipgen u_bdown (.in(key_down),  .clk(clk), .reset(reset), .out(down));
     blipgen u_benter(.in(key_enter), .clk(clk), .reset(reset), .out(enter));
     
-
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Sound Section
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    // declare wire
+    wire playSound;
+    
+    SongPlayer u_player(.clock(clk), .reset(reset), .playSound(), .audioOut(audioOut), .aud_sd(aud_sd));
+    
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // VGA Output/Game Control Section
     //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -68,7 +77,7 @@ module top(clk, reset, dreset, ps2d, ps2c, hsync, vsync, rgb);
     
     // display and game engine instantiation
     display u_display(.video_on(video_on), .pix_x(pixel_x), .pix_y(pixel_y), .graph_rgb(rgb_next), .clk(clk), .reset(reset),
-        .left(left), .right(right), .up(up), .down(down), .enter(enter), .game_reset(key_game_reset));
+        .left(left), .right(right), .up(up), .down(down), .enter(enter), .game_reset(key_game_reset), .sound(playSound));
     
     // assign output
     assign rgb = rgb_reg;
