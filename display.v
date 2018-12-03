@@ -42,6 +42,10 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     // declare counter to count up to 64
     reg [2:0] counter1, counter2;
     
+    // declare counter for shift down cycle and generate cycle
+    reg [2:0] scounter1, scounter2;
+    reg [2:0] gcounter;
+    
     // MASTER board logic
     always @(posedge clk, posedge reset) begin
         //------------------------------------------------------------------------------------------------
@@ -53,6 +57,9 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
             selected <= 0;
             counter1 <= 0;
             counter2 <= 0;
+            scounter1 = 7;
+            scounter2 = 7;
+            gcounter = 0;
             for (i = 0; i < 8; i = i + 1) begin    
                 for (k = 0; k < 8; k = k + 1) begin
                     board[i][k] <= 0;
@@ -67,23 +74,42 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
         
         else begin
             //--------------------------------------------------------------------------------------------
+            // shift down
+            //--------------------------------------------------------------------------------------------
+            if (board[scounter1][scounter2] == 7 && board[scounter1-1][scounter2] != 7) begin
+                boardt = board[scounter1][scounter2]; 
+                board[scounter1][scounter2] = board[scounter1-1][scounter2];
+                board[scounter1-1][scounter2] = boardt;
+            end
+            if (scounter1 == 1 && scounter2 == 0) begin
+                scounter1 = 7;
+                scounter2 = 7;
+            end
+            if (scounter2 == 0) begin
+                scounter1 = scounter1 - 1;
+                scounter2 = 7;
+            end
+            else begin
+                scounter2 = scounter2 - 1;
+            end
+            //--------------------------------------------------------------------------------------------
             // clear board logic
             //--------------------------------------------------------------------------------------------
             for (i = 0; i < 8; i = i + 1) begin // horizontal check
                 for (k = 0; k < 6; k = k + 1) begin
-                    if (board[i][k] == board[i][k+1] && board[i][k] == board[i][k+2]) begin
-                        board[i][k]   = 7;
-                        board[i][k+1] = 7;
-                        board[i][k+2] = 7;
+                    if (board[i][k] == board[i][k+1] && board[i][k] == board[i][k+2] && board[i][k] != 7) begin
+                        board[i][k]   <= 7;
+                        board[i][k+1] <= 7;
+                        board[i][k+2] <= 7;
                     end 
                 end
             end
             for (i = 0; i < 6; i = i + 1) begin // vertical check
                 for (k = 0; k < 8; k = k + 1) begin
-                    if (board[i][k] == board[i+1][k] && board[i][k] == board[i+2][k]) begin
-                        board[i][k]   = 7;
-                        board[i+1][k] = 7;
-                        board[i+2][k] = 7;
+                    if (board[i][k] == board[i+1][k] && board[i][k] == board[i+2][k] && board[i][k] != 7) begin
+                        board[i][k]   <= 7;
+                        board[i+1][k] <= 7;
+                        board[i+2][k] <= 7;
                     end
                 end
             end
