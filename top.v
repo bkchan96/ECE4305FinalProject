@@ -58,8 +58,9 @@ module top(clk, reset, dreset, ps2d, ps2c, hsync, vsync, rgb, audioOut, aud_sd);
     
     // declare wire
     wire playSound;
+    wire [1:0] sound;
     
-    SongPlayer u_player(.clock(clk), .reset(reset), .playSound(), .audioOut(audioOut), .aud_sd(aud_sd));
+    SongPlayer u_player(.clock(clk), .reset(reset), .sound(sound), .playSound(playSound), .audioOut(audioOut), .aud_sd(aud_sd));
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // VGA Output/Game Control Section
@@ -77,7 +78,7 @@ module top(clk, reset, dreset, ps2d, ps2c, hsync, vsync, rgb, audioOut, aud_sd);
     
     // display and game engine instantiation
     display u_display(.video_on(video_on), .pix_x(pixel_x), .pix_y(pixel_y), .graph_rgb(rgb_next), .clk(clk), .reset(reset),
-        .left(left), .right(right), .up(up), .down(down), .enter(enter), .game_reset(key_game_reset), .sound(playSound));
+        .left(left), .right(right), .up(up), .down(down), .enter(enter), .game_reset(key_game_reset), .sound(sound), .playSound(playSound));
     
     // assign output
     assign rgb = rgb_reg;

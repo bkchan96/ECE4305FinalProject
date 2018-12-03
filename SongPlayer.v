@@ -3,6 +3,7 @@ module SongPlayer
     input clock,
     input reset,
     input playSound,
+    input [1:0] sound,
     output reg audioOut,
     output wire aud_sd
 );
@@ -21,12 +22,12 @@ module SongPlayer
     
     assign aud_sd = 1'b1;
     
-    MusicSheet effect(number, notePeriod, duration, done);
+    MusicSheet 	mysong(number, sound, notePeriod, duration, done);
     
     wire stop;
     wire trigger;
     assign stop = done || reset;
-    assign trigger = stop || playSound;
+    assign trigger = stop || playSound;    
     
     always @ (posedge trigger)
     begin

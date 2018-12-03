@@ -1,12 +1,13 @@
 `timescale 1ns / 1ps
 
-module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, down, enter, game_reset, sound);
+module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, down, enter, game_reset, sound, playSound);
     input clk, reset;
     input left, right, up, down, enter, game_reset;
     input video_on;
     input [9:0] pix_x, pix_y;
     output reg [11:0] graph_rgb;
-    output reg sound;
+    output reg [1:0] sound;
+    output reg playSound;
     
     //--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//
     // Game Control //////////////////////////////////////////////////////////////////////////////////////
@@ -74,7 +75,6 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
         end
         
         else begin
-            sound <= 0;
             //--------------------------------------------------------------------------------------------
             // shift down
             //--------------------------------------------------------------------------------------------
@@ -87,7 +87,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                 scounter1 = 7;
                 scounter2 = 7;
             end
-            if (scounter2 == 0) begin
+            else if (scounter2 == 0) begin
                 scounter1 = scounter1 - 1;
                 scounter2 = 7;
             end
@@ -100,20 +100,18 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
             for (i = 0; i < 8; i = i + 1) begin // horizontal check
                 for (k = 0; k < 6; k = k + 1) begin
                     if (board[i][k] == board[i][k+1] && board[i][k] == board[i][k+2] && board[i][k] != 7) begin
-                        board[i][k]   = 7;
-                        board[i][k+1] = 7;
-                        board[i][k+2] = 7;
-                        sound <= 1;
+                        board[i][k]   <= 7;
+                        board[i][k+1] <= 7;
+                        board[i][k+2] <= 7;
                     end 
                 end
             end
             for (i = 0; i < 6; i = i + 1) begin // vertical check
                 for (k = 0; k < 8; k = k + 1) begin
                     if (board[i][k] == board[i+1][k] && board[i][k] == board[i+2][k] && board[i][k] != 7) begin
-                        board[i][k]   = 7;
-                        board[i+1][k] = 7;
-                        board[i+2][k] = 7;
-                        sound <= 1;
+                        board[i][k]   <= 7;
+                        board[i+1][k] <= 7;
+                        board[i+2][k] <= 7;
                     end
                 end
             end
@@ -129,6 +127,9 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
             // toggle select mode
             //--------------------------------------------------------------------------------------------
             if (enter) begin
+                playSound = 0;
+                sound = 2'b10;
+                playSound = 1;
                 selected <= ~selected;
             end
             //--------------------------------------------------------------------------------------------
@@ -159,19 +160,31 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
             // move the cursor
             //--------------------------------------------------------------------------------------------
             else if (~selected) begin
-                if (left && colselect != 0)
+                playSound = 0;
+                sound = 2'b00;
+                if (left && colselect != 0) begin
                     colselect <= colselect - 1;
-                else if (right && colselect != 7)
+                    playSound = 1;
+                end
+                else if (right && colselect != 7) begin
                     colselect <= colselect + 1;
-                else if (up && rowselect != 0)
+                    playSound = 1;
+                end
+                else if (up && rowselect != 0) begin
                     rowselect <= rowselect - 1;
-                else if (down && rowselect != 7)
+                    playSound = 1;
+                end
+                else if (down && rowselect != 7) begin
                     rowselect <= rowselect + 1;
+                    playSound = 1;
+                end
             end
             //--------------------------------------------------------------------------------------------
             // switch when selected
             //--------------------------------------------------------------------------------------------
             else if (selected) begin
+                playSound = 0;
+                sound = 2'b01;
                 //--------------------------------------
                 // left
                 //--------------------------------------
@@ -201,6 +214,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                         boardt = board[rowselect][colselect];
                         board[rowselect][colselect] = board[rowselect][colselect-1];
                         board[rowselect][colselect-1] = boardt;
+                        playSound = 1;
                     end
                     selected = 0;
                 end
@@ -233,6 +247,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                         boardt = board[rowselect][colselect];
                         board[rowselect][colselect] = board[rowselect][colselect+1];
                         board[rowselect][colselect+1] = boardt;
+                        playSound = 1;
                     end
                     selected = 0;
                 end
@@ -265,6 +280,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                         boardt = board[rowselect][colselect];
                         board[rowselect][colselect] = board[rowselect-1][colselect];
                         board[rowselect-1][colselect] = boardt;
+                        playSound = 1;
                     end
                     selected = 0;
                 end
@@ -297,6 +313,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                         boardt = board[rowselect][colselect];
                         board[rowselect][colselect] = board[rowselect+1][colselect];
                         board[rowselect+1][colselect] = boardt;
+                        playSound = 1;
                     end
                     selected = 0;
                 end
