@@ -448,7 +448,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     
     // blacking out board for reset
     wire game_reset_on;
-    assign game_reset_on = game_reset && pix_x < 447 && pix_x > 191 && pix_y < 369 && pix_y > 111 ? 1 : 0;
+    assign game_reset_on = game_reset && pix_x < 449 && pix_x > 190 && pix_y < 370 && pix_y > 110 ? 1 : 0;
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // rgb multiplexing circuit
