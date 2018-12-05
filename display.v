@@ -108,27 +108,6 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
         
         else begin
             //--------------------------------------------------------------------------------------------
-            // shift down
-            //--------------------------------------------------------------------------------------------
-            if (scounter1 != 0 && board[scounter1][scounter2] == 7 && board[scounter1-1][scounter2] != 7) begin
-                boardt = board[scounter1][scounter2]; 
-                board[scounter1][scounter2] = board[scounter1-1][scounter2];
-                board[scounter1-1][scounter2] = boardt;
-            end
-            else if (scounter1 == 0 && board[scounter1][scounter2] == 7 && rout < 5)
-                board[scounter1][scounter2] = rout;
-            if (scounter1 == 0 && scounter2 == 0) begin
-                scounter1 = 7;
-                scounter2 = 7;
-            end
-            else if (scounter2 == 0) begin
-                scounter1 = scounter1 - 1;
-                scounter2 = 7;
-            end
-            else begin
-                scounter2 = scounter2 - 1;
-            end
-            //--------------------------------------------------------------------------------------------
             // clear board logic
             //--------------------------------------------------------------------------------------------
             for (i = 0; i < 8; i = i + 1) begin // horizontal check
@@ -148,6 +127,27 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                         board[i+2][k] <= 7;
                     end
                 end
+            end
+            //--------------------------------------------------------------------------------------------
+            // shift down
+            //--------------------------------------------------------------------------------------------
+            if (scounter1 != 0 && board[scounter1][scounter2] == 7 && board[scounter1-1][scounter2] != 7) begin
+                boardt = board[scounter1][scounter2]; 
+                board[scounter1][scounter2] = board[scounter1-1][scounter2];
+                board[scounter1-1][scounter2] = boardt;
+            end
+            else if (scounter1 == 0 && board[scounter1][scounter2] == 7 && rout < 5)
+                board[scounter1][scounter2] = rout;
+            if (scounter1 == 0 && scounter2 == 0) begin
+                scounter1 = 7;
+                scounter2 = 7;
+            end
+            else if (scounter2 == 0) begin
+                scounter1 = scounter1 - 1;
+                scounter2 = 7;
+            end
+            else begin
+                scounter2 = scounter2 - 1;
             end
             //--------------------------------------------------------------------------------------------
             // load board copy to check switching logic
