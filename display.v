@@ -16,6 +16,7 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     // declare board (row/column)
     reg [2:0] board  [7:0][7:0];
     reg [2:0] boardc [7:0][7:0];
+    reg [2:0] boardr [7:0][7:0];
 
     // looping variables
     reg [7:0] i, k; //row, column
@@ -48,6 +49,39 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     reg [2:0] scounter1, scounter2;
     reg [2:0] gcounter;
     
+    always @(posedge clk, posedge reset) begin
+        if (reset) begin
+            counter1 <= 0;
+            counter2 <= 0;
+            for (i = 0; i < 8; i = i + 1) begin    
+                for (k = 0; k < 8; k = k + 1) begin
+                    boardr[i][k] <= 0;
+                end
+            end
+        end
+        else begin
+            // reset complete if both counters are 7
+            if (counter1 == 7 && counter2 == 8) begin
+                counter1 <= 0;
+                counter2 <= 0;
+            end
+            // start reseting the board
+            else
+                // if random number is greater than 4, throw away and do it on the next clock cycle
+                if (rout < 5) begin
+                    boardr[counter1][counter2] <= rout;
+                    
+                    // increment counters to run through all board spaces
+                    if (counter1 == 7) begin
+                        counter1 <= 0;
+                        counter2 <= counter2 + 1;
+                    end
+                    else
+                        counter1 <= counter1 + 1;
+                end
+        end
+    end
+    
     // MASTER board logic
     always @(posedge clk, posedge reset) begin
         //------------------------------------------------------------------------------------------------
@@ -57,8 +91,6 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
             colselect <= 0;
             rowselect <= 0;
             selected <= 0;
-            counter1 <= 0;
-            counter2 <= 0;
             scounter1 = 7;
             scounter2 = 7;
             gcounter = 0;
@@ -78,12 +110,14 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
             //--------------------------------------------------------------------------------------------
             // shift down
             //--------------------------------------------------------------------------------------------
-            if (board[scounter1][scounter2] == 7 && board[scounter1-1][scounter2] != 7) begin
+            if (scounter1 != 0 && board[scounter1][scounter2] == 7 && board[scounter1-1][scounter2] != 7) begin
                 boardt = board[scounter1][scounter2]; 
                 board[scounter1][scounter2] = board[scounter1-1][scounter2];
                 board[scounter1-1][scounter2] = boardt;
             end
-            if (scounter1 == 1 && scounter2 == 0) begin
+            else if (scounter1 == 0 && board[scounter1][scounter2] == 7 && rout < 5)
+                board[scounter1][scounter2] = rout;
+            if (scounter1 == 0 && scounter2 == 0) begin
                 scounter1 = 7;
                 scounter2 = 7;
             end
@@ -136,25 +170,11 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
             // on game_reset: randomize the game board
             //--------------------------------------------------------------------------------------------
             else if (game_reset) begin
-                // reset complete if both counters are 7
-                if (counter1 == 7 && counter2 == 8) begin
-                    counter1 <= 0;
-                    counter2 <= 0;
-                end
-                // start reseting the board
-                else
-                    // if random number is greater than 4, throw away and do it on the next clock cycle
-                    if (rout < 5) begin
-                        board[counter1][counter2] <= rout;
-                        
-                        // increment counters to run through all board spaces
-                        if (counter1 == 7) begin
-                            counter1 <= 0;
-                            counter2 <= counter2 + 1;
-                        end
-                        else
-                            counter1 <= counter1 + 1;
+                for (i = 0; i < 8; i = i + 1) begin    
+                    for (k = 0; k < 8; k = k + 1) begin
+                        board[i][k] <= boardr[i][k];
                     end
+                end
             end
             //--------------------------------------------------------------------------------------------
             // move the cursor
@@ -444,11 +464,6 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
     
     // text
     bejeweled_text u_bejeweled_text(.pixel_x(pix_x), .pixel_y(pix_y), .top_left_x(248), .top_left_y(56), .on(bejeweled_text_on));
-    resetting_text u_resetting_text(.pixel_x(pix_x), .pixel_y(pix_y), .top_left_x(240), .top_left_y(240), .on(game_reset_text_on));
-    
-    // blacking out board for reset
-    wire game_reset_on;
-    assign game_reset_on = game_reset && pix_x < 449 && pix_x > 190 && pix_y < 370 && pix_y > 110 ? 1 : 0;
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // rgb multiplexing circuit
@@ -478,10 +493,6 @@ module display(video_on, pix_x, pix_y, graph_rgb, clk, reset, left, right, up, d
                 graph_rgb <= cursorColor;
             else if (cursorOn && selected)
                 graph_rgb <= RED;
-            else if (game_reset_text_on && game_reset)
-                graph_rgb <= WHITE;
-            else if (game_reset_on)
-                graph_rgb <= BLACK;
             else if (sym_flag) begin
                 for (i = 0; i < 8; i = i + 1) begin
                     for (k = 0; k < 8; k = k + 1) begin

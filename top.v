@@ -12,7 +12,7 @@ module top(clk, reset, dreset, ps2d, ps2c, hsync, vsync, rgb, audioOut, aud_sd);
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     
     // declare wires
-    wire left, right, up, down, enter;
+    wire left, right, up, down, enter, game_reset;
     wire rx_done_tick;
     wire [7:0] scan_code;
     wire key_left, key_right, key_up, key_down, key_game_reset, key_enter;
@@ -51,6 +51,7 @@ module top(clk, reset, dreset, ps2d, ps2c, hsync, vsync, rgb, audioOut, aud_sd);
     blipgen u_bup   (.in(key_up),    .clk(clk), .reset(reset), .out(up));
     blipgen u_bdown (.in(key_down),  .clk(clk), .reset(reset), .out(down));
     blipgen u_benter(.in(key_enter), .clk(clk), .reset(reset), .out(enter));
+    blipgen u_game_reset(.in(key_game_reset), .clk(clk), .reset(reset), .out(game_reset));
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // Sound Section
@@ -78,7 +79,7 @@ module top(clk, reset, dreset, ps2d, ps2c, hsync, vsync, rgb, audioOut, aud_sd);
     
     // display and game engine instantiation
     display u_display(.video_on(video_on), .pix_x(pixel_x), .pix_y(pixel_y), .graph_rgb(rgb_next), .clk(clk), .reset(reset),
-        .left(left), .right(right), .up(up), .down(down), .enter(enter), .game_reset(key_game_reset), .sound(sound), .playSound(playSound));
+        .left(left), .right(right), .up(up), .down(down), .enter(enter), .game_reset(game_reset), .sound(sound), .playSound(playSound));
     
     // assign output
     assign rgb = rgb_reg;
